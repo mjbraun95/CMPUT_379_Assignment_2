@@ -1,0 +1,84 @@
+Objectives
+This programming assignment is intended to give you experience with developing system programs
+that utilize some of the following UNIX features: signals, threads, timers, pipes, FIFOs, and I/O
+multiplexing for nonblocking I/O.
+Part 1
+Program Specifications. This part asks for developing a C/C++ program that exhibits some
+concurrency aspects. The required program can be invoked as
+% a2p1 nLine inputFile delay
+When run, the program performs a number of iterations. In each iteration it reads from the
+inputFile the next nLine text lines and displays them on the screen. It then enters a de-
+lay period for the specified number of delay milliseconds. During the delay period, the program
+stays responsive to input from the keyboard, as detailed below. After the delay period ends, the
+program proceeds to the next iteration where it reads and displays the next group of nLine text
+lines, and then enters another delay period. Subsequent iterations follow the same pattern. More
+details are given below.
+1. At the beginning (and end) of each delay period, the program displays a message to inform
+the user of its entering (respectively, leaving) a delay period.
+2. During a delay period, the program loops on prompting the user to enter a command, and
+executes the entered command. So, depending on the length of the delay period, the user can
+enter multiple commands for the program to execute.
+3. Each user command is either quit, or some other string that the program tries to execute as
+a shell command line. The quit command causes the program to terminate and exit to the
+shell. Other strings are processed by passing them to the shell using the standard I/O library
+function popen (See, e.g., Section 15.3 of the [APUE 3/E]).
+4. Other than forking a child process implied by calling popen(), the program should not fork
+a child process to achieve the desired behaviour. The process, however, may have threads
+and/or use timers
+
+Example 1. This example gives sample output of running % a2p1 5 fmt.man 3500 where
+nLine = 5, the input file is generated using man fmt | fmt -60 > fmt.man (the manual
+page of the fmt program with at most 60 characters per line), and delay = 3.5 seconds.
+Sample output (edited for clarity):
+• The program displays 5 lines from the input file, enters a delay interval, prompts the user to
+enter a command (no command is entered), and the delay interval ends.
+a2p1 starts: (nLine= 5, inFile=’fmt.man’, delay= 3500)
+[0001]: ’FMT(1) User Commands’
+[0002]: ’FMT(1)’
+[0003]: ’’
+[0004]: ’NAME’
+[0005]: ’ fmt - simple optimal text formatter’
+*** Entering a delay period of 3500 msec
+User command:
+*** Delay period ended
+• In the second iteration, the program displays the next 5 lines, and then enters a delay period.
+The user enters a date command.
+[0006]: ’’
+[0007]: ’SYNOPSIS’
+[0008]: ’ fmt [-WIDTH] [OPTION]... [FILE]...’
+[0009]: ’’
+[0010]: ’DESCRIPTION’
+*** Entering a delay period of 3500 msec
+User command: date
+Thu 09 Feb 2023 08:03:48 PM MST
+User command:
+*** Delay period ended
+• In the third iteration, the user enters a ls command:
+[0011]: ’ Reformat each paragraph in the FILE(s),’
+[0012]: ’ writing to standard output. The option -WIDTH is’
+[0013]: ’ an abbreviated form of --width=DIGITS.’
+[0014]: ’’
+[0015]: ’ With no FILE, or when FILE is -, read standard’
+*** Entering a delay period of 3500 msec
+User command: ls -l /etc/G*
+total 12
+-rw-r--r-- 1 root root 6489 Dec 8 2018 GNUstep.conf
+-rw-r--r-- 1 root root 143 Apr 28 2020 gdomap_probes
+*** Delay period ended
+• In the next iteration, the user quits the program.
+[0016]: ’ input.’
+[0017]: ’’
+[0018]: ’ Mandatory arguments to long options are mandatory’
+[0019]: ’ for short options too.’
+[0020]: ’’
+*** Entering a delay period of 3500 msec
+User command: quit
+
+Note: Depending on when the user enters a command during the delay interval, and the length
+of the output of the command, the displayed lines from the execution of the user command, the
+input file, and the "User command:" prompt may appear interleaved.
+
+Important: Don’t forget to cleanup the running processes by using the command
+pkill -u $USER pattern
+where pattern can be a string that appears in the processes you would like to terminate, e.g.,
+pkill -u $USER clock.

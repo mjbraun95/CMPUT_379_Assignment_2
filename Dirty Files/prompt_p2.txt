@@ -1,0 +1,200 @@
+Part 2
+File sharing software systems allow a community of users to share files contributed by members.
+This part calls for implementing a small set of features that may be used in a client-server system
+that provides such a service. In the system, each user (a client program) uploads files of different
+objects (e.g., HTML files, images, sound clips, video clips, etc.) to be stored and distributed with
+the help of a server program. Each object has a unique name and an owner (the client program that
+succeeds in storing the file at the server).
+Program Specifications. You are asked to write a C/C++ program that implements the func-
+tionality of a client-server system. The program can be invoked to run as a server using
+% a2p2 -s
+or, run as a client using
+% a2p2 -c idNumber inputFile
+where idNumber is a client identification number, and inputFile is a file that contains work
+that needs to be done by the clients. The server can serve at most NCLIENT = 3 clients. Each
+client is assigned a unique idNumber in the range [1, NCLIENT]. The server is assumed to have
+idNumber = 0.
+Data transfers between each client and the server use FIFOs. Clients do not communicate
+with each other. A FIFO named fifo-0-x carries data from the server to client x. Similarly,
+fifo-x-0 carries data in the other direction (from client to server).
+Note: For simplicity, the needed 2·NCLIENT FIFOs may be created in the work direc-
+tory using the shell command mkfifo prior to starting your program development.
+Input File Format
+The input file is a common file shared among all intended clients. The file has the following format.
+• A line starting with ’#’ is a comment line (skipped)
+• Empty lines are skipped. For simplicity, an empty line has a single ’\n’ character.
+• Else, a line specifies a command line whose format and meaning matches one of the follow-
+ing cases:
+– "idNumber (put|get|delete) objectName": only the client with the spec-
+ified idNumber sends to the server the specified get, put, or delete request of the
+named object. An object name has at most MAXWORD = 32 characters.
+– "idNumber gtime": only the client with the specified idNumber sends to the
+server a get time request.
+– "idNumber delay x": only the client with the specified idNumber delays read-
+ing and processing subsequent lines of the input file for an interval of x milliseconds.
+– "idNumber quit": only the client with the specified idNumber should terminate
+normally
+
+Packet Types
+Communication in the system uses messages stored in formatted packets. Each packet has a type,
+and carries a (possibly empty) message. Your program should support the following packet types.
+• PUT, GET, and DELETE: For a specified object name, a client executes a get, put, or delete
+command by sending a packet of the corresponding type, where the message specifies the
+object name. An error condition arises at the server when the client’s request asks for doing
+one of the following:
+– getting a non-existing object
+– putting an object that already exists
+– deleting an object owned by another client
+• GTIME and TIME: A client processes a get server’s time command (gtime) by sending a
+GTIME packet (with an empty message). The server replies by sending a TIME packet where
+the message contains the time in seconds (a real number) since the server started operation.
+• OK and ERROR: The server replies with an OK packet if the received request is processed
+successfully. Else, the server replies with an ERROR packet with a suitable error description
+in the message part.
+
+The Client Loop
+Each client is assigned a unique idNumber, and the input file has command lines specific to each
+idNumber. The client performs a number of iterations. In each iteration, it reads the next text line
+from the input file, and executes the specified command only if the client’s idNumber matches
+the one specified on the line. Otherwise, the client ignores the line. The execution of a command
+depends on its type, as follows:
+• Commands in the set {put, get, delete, gtime} are executed by sending a packet
+to the server to do the corresponding operation. The packet contains an object name in the
+message part, as needed. The client then waits for a server’s response.
+• The delay command is for the client to suspend its operation for the specified number of
+milliseconds (i.e., suspending reading and processing of subsequent input lines, and trans-
+mitting packets).
+Note: For simplicity, (and unlike Part 1) here a client is not required to stay
+responsive to input from the keyboard, or do any other activity, during a delay
+interval.
+• The quit command causes the client to terminate normally (and exit to the shell).
+To monitor progress of each client program, the program is required to print information on all
+transmitted and received packets. In addition, it should indicate when it enters (and exits) a delay
+period.
+
+The Server Loop
+When the program works as a server, it uses I/O multiplexing (e.g., select() or poll()) to
+handle I/O from the keyboard and the FIFOs in a nonblocking manner. Each iteration of the main
+loop performs the following steps:
+1. Poll the keyboard for a user command. The user can issue one of the following commands.
+• list: The program writes the stored information about the objects (the idNumber of
+the owning client, and the object name).
+• quit: The program exits normally.
+2. Poll the incoming FIFOs from the clients. The server handles each incoming packet, as
+described above.
+To monitor progress of the server, the program is required to print information on all transmitted
+and received packets.
+
+Example 1. This example gives sample output of running the server, client 1, and client 2 in
+this order (from three different terminal windows on the same lab workstation). The input file
+a2p2-ex1.dat contains the following lines.
+# Transactions file for 2 clients
+# a2p2 -s
+# a2p2 -c 1 a2p2-ex1.dat
+# a2p2 -c 2 a2p2-ex1.dat
+1 gtime
+1 put index1.html
+1 put img1.jpg
+1 put video1.mp4
+1 delay 2500
+2 gtime
+2 put index2.html
+2 put img2.jpg
+2 put video2.mp4
+2 delay 1500
+1 gtime
+1 get index2.html
+1 get index3.html
+1 delete img2.jpg
+1 delay 3000
+1 gtime
+1 quit
+2 gtime
+2 quit
+
+Sample output (edited for clarity):
+
+• Client 1 output:
+main: do_client (idNumber= 1, inputFile= a2p2-ex1.dat)
+Transmitted (src= client:1) GTIME
+Received (src= server) (TIME: 1.52)
+Transmitted (src= client:1) (PUT: img1.jpg)
+Received (src= server) OK
+Transmitted (src= client:1) (PUT: video1.mp4)
+Received (src= server) OK
+*** Entering a delay period of 2500 msec
+*** Exiting delay period
+Transmitted (src= client:1) GTIME
+Received (src= server) (TIME: 4.39)
+Transmitted (src= client:1) (GET: index2.html)
+Received (src= server) OK
+Transmitted (src= client:1) (GET: index3.html)
+Received (src= server) (ERROR: object not found)
+Transmitted (src= client:1) (DELETE: img2.jpg)
+Received (src= server) (ERROR: client not owner)
+*** Entering a delay period of 3000 msec
+*** Exiting delay period
+Transmitted (src= client:1) GTIME
+Received (src= server) (TIME: 7.57)
+
+• Client 2 output:
+main: do_client (idNumber= 2, inputFile= a2p2-ex1.dat)
+Transmitted (src= client:2) GTIME
+Received (src= server) (TIME: 2.89)
+Transmitted (src= client:2) (PUT: index2.html)
+Received (src= server) OK
+Transmitted (src= client:2) (PUT: img2.jpg)
+Received (src= server) OK
+Transmitted (src= client:2) (PUT: video2.mp4)
+Received (src= server) OK
+*** Entering a delay period of 1500 msec
+*** Exiting delay period
+Transmitted (src= client:2) GTIME
+Received (src= server) (TIME: 4.84)
+
+• Server’s output:
+a2p2: do_server
+Received (src= client:1) GTIME
+Transmitted (src= server) (TIME: 1.52)
+Received (src= client:1) (PUT: index1.html)
+Transmitted (src= server) OK
+Received (src= client:1) (PUT: img1.jpg)
+Transmitted (src= server) OK
+Received (src= client:1) (PUT: video1.mp4)
+Transmitted (src= server) OK
+Received (src= client:2) GTIME
+Transmitted (src= server) (TIME: 2.89)
+Received (src= client:2) (PUT: index2.html)
+Transmitted (src= server) OK
+Received (src= client:2) (PUT: img2.jpg)
+Transmitted (src= server) OK
+Received (src= client:2) (PUT: video2.mp4)
+Transmitted (src= server) OK
+Received (src= client:1) GTIME
+Transmitted (src= server) (TIME: 4.39)
+
+Received (src= client:1) (GET: index2.html)
+Transmitted (src= server) OK
+Received (src= client:1) (GET: index3.html)
+Transmitted (src= server) (ERROR: object not found)
+Received (src= client:1) (DELETE: img2.jpg)
+Transmitted (src= server) (ERROR: client not owner)
+Received (src= client:2) GTIME
+Transmitted (src= server) (TIME: 4.84)
+Received (src= client:1) GTIME
+Transmitted (src= server) (TIME: 7.57)
+list
+Object table:
+(owner= 1, name= index1.html)
+(owner= 1, name= img1.jpg)
+(owner= 1, name= video1.mp4)
+(owner= 2, name= index2.html)
+(owner= 2, name= img2.jpg)
+(owner= 2, name= video2.mp4)
+quit
+quitting
+
+Important: Don’t forget to cleanup the running processes by using the command
+pkill -u $USER pattern
+where pattern can be a string that appears in the processes you would like to terminate, e.g.,
+pkill -u $USER clock.
