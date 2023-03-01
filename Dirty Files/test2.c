@@ -3,16 +3,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
+#include <sys/select.h>
 
-#define CMD_BUF_SIZE 1024
-
-void print_usage(const char *prog_name) {
-    printf("Usage: %s nLine inputFile delay\n", prog_name);
-}
+#define COMMAND_BUFFER_SIZE 1024
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
-        print_usage(argv[0]);
+        printf("Usage: %s (number of lines) (input file) (delay(ms))\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -28,11 +25,11 @@ int main(int argc, char *argv[]) {
     printf("Starting the program with (nLine=%d, inputFile='%s', delay=%d)...\n",
             nLine, argv[2], delay);
 
-    char cmd_buf[CMD_BUF_SIZE];
+    char cmd_buf[COMMAND_BUFFER_SIZE];
     int line_count = 0;
 
     while (1) {
-        if (fgets(cmd_buf, CMD_BUF_SIZE, input_file) == NULL) {
+        if (fgets(cmd_buf, COMMAND_BUFFER_SIZE, input_file) == NULL) {
             break;
         }
 
@@ -56,22 +53,22 @@ int main(int argc, char *argv[]) {
                 perror("select");
                 exit(EXIT_FAILURE);
             } else if (select_res == 1) {
-                if (fgets(cmd_buf, CMD_BUF_SIZE, stdin) != NULL) {
+                if (fgets(cmd_buf, COMMAND_BUFFER_SIZE, stdin) != NULL) {
                     cmd_buf[strcspn(cmd_buf, "\n")] = '\0';
                     printf("User command: %s\n", cmd_buf);
                     if (strcmp(cmd_buf, "quit") == 0) {
                         break;
                     } else {
-                        char pipe_cmd[CMD_BUF_SIZE + 10]; // add space for " 2>&1"
-                        snprintf(pipe_cmd, CMD_BUF_SIZE + 10, "%s 2>&1", cmd_buf);
+                        char pipe_cmd[COMMAND_BUFFER_SIZE + 10]; // add space for " 2>&1"
+                        snprintf(pipe_cmd, COMMAND_BUFFER_SIZE + 10, "%s 2>&1", cmd_buf);
 
                         FILE *pipe_file = popen(pipe_cmd, "r");
                         if (pipe_file == NULL) {
                             perror("popen");
                             exit(EXIT_FAILURE);
                         } else {
-                            char output_buf[CMD_BUF_SIZE];
-                            while (fgets(output_buf, CMD_BUF_SIZE, pipe_file) != NULL) {
+                            char output_buf[COMMAND_BUFFER_SIZE];
+                            while (fgets(output_buf, COMMAND_BUFFER_SIZE, pipe_file) != NULL) {
                                 printf("%s", output_buf);
                             }
                             pclose(pipe_file);
@@ -87,6 +84,5 @@ int main(int argc, char *argv[]) {
     }
 
     fclose(input_file);
-    printf("Program terminated.\n");
     return EXIT_SUCCESS;
 }
