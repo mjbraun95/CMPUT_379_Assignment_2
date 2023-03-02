@@ -18,6 +18,7 @@
 #include<stdlib.h>
 #include<unistd.h>              /* POSIX.2 Symbolic Constants */
 #include <poll.h>	
+#include <sys/types.h>
 
 #define	N	3
 
@@ -36,7 +37,7 @@ int  fork_and_write (int id) {
     close (fd[id][0]);			 /* child won't read */
 
     for (i=0; i < 10; i++)  {
-    		// printf ("fork_and_write: writing to fd= %d\n", fd[id][1]);
+    		printf ("fork_and_write: writing to fd= %d\n", fd[id][1]);
 
     	if (write(fd[id][1], buf, 1) < 0) 
     		{ perror ("pipe write error \n"); exit (1); }
@@ -61,18 +62,19 @@ int main (int argc, char **argv) {
     	if (pipe(fd[i]) < 0) { perror ("pipe error \n"); exit (1); }
 
     for (i= 0; i < N; i++)  pid[i]= fork_and_write(i);
-	 //   printf ("debug: main: forking writer %d, fd0= %d, fd1= %d\n",
-    	 // 		i, fd[i][0], fd[i][1]);
+	   printf ("debug: main: forking writer %d, fd0= %d, fd1= %d\n",
+    	 		i, fd[i][0], fd[i][1]);
 
     for (i= 0; i < N; i++) {
     	close (fd[i][1]);			/* parent won't write */
     	done[i]= 0;
     	pollfd[i].fd= fd[i][0];
-	pollfd[i].events= POLLIN;
-	pollfd[i].revents= 0;
-		//printf("debug: setting writer= %d, done= %d, revents= %x\n",
-		//i, done[i], pollfd[i].events);
-    }	
+		pollfd[i].events= POLLIN;
+		pollfd[i].revents= 0;
+		
+		printf("debug: setting writer= %d, done= %d, revents= %x\n",
+		i, done[i], pollfd[i].events);
+	}	
 
     timeout= 0;
 
@@ -81,12 +83,12 @@ int main (int argc, char **argv) {
     while (n_writers > 0) {
 
     	rval= poll (pollfd, N, timeout);
-		 // printf ("rval= %d \n", rval);
+		printf ("rval= %d \n", rval);
     	    
 	for (writerId= 0; writerId < N; writerId++) {
 
-		//printf("debug: writer= %d, done= %d, revents= %x\n",
-		//	writerId, done[writerId], pollfd[writerId].revents);
+		printf("debug: writer= %d, done= %d, revents= %x\n",
+			writerId, done[writerId], pollfd[writerId].revents);
 	    if ( done[writerId] == 0  && 
 		 (pollfd[writerId].revents & POLLIN) )
 	    {

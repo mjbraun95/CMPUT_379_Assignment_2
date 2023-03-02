@@ -1,4 +1,5 @@
-Part 2
+Write a C script. Here is the description of how it should operate
+
 File sharing software systems allow a community of users to share files contributed by members.
 This part calls for implementing a small set of features that may be used in a client-server system
 that provides such a service. In the system, each user (a client program) uploads files of different
@@ -51,6 +52,11 @@ the message contains the time in seconds (a real number) since the server starte
 • OK and ERROR: The server replies with an OK packet if the received request is processed
 successfully. Else, the server replies with an ERROR packet with a suitable error description
 in the message part.
+
+
+
+
+
 
 The Client Loop
 Each client is assigned a unique idNumber, and the input file has command lines specific to each

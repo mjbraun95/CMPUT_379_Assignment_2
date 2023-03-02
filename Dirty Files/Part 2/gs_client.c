@@ -34,7 +34,7 @@
 			// service information
 #include <poll.h>
 
-#define	CPU_LIMIT	10
+#define	CPU_LIMIT	100
 
 int main (int argc, char **argv) {
     

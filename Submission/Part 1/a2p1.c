@@ -27,17 +27,20 @@ int main(int argc, char *argv[]) {
             int lines_printed = 0;
             printf("a2p1 starts: (nLine=%s, inFile='%s', delay=%s)...\n", argv[1], argv[2], argv[3]);
             while (1) {
-                fgets(line_buffer, LINE_BUFFER_SIZE, input_fp);
-                lines_printed++;
+                if (fgets(line_buffer, LINE_BUFFER_SIZE, input_fp) != NULL) {
+                    lines_printed++;
+                }
                 if (lines_printed % lines_per_iteration == 0) {
                     // nLines reached
                     printf("\n*** Entering a delay period of %d msec\n", delay_ms);
 
-                    char* command = input("User command: ");
+                    char* command = getpass("");
                     fflush(stdout);
                     sleep(delay_ms/1000);
 
-                    fgets(command, sizeof(command), stdin);
+                    if (fgets(command, sizeof(command), stdin) != NULL) {
+                        printf("command: %s", command);
+                    };
                 }
 
             }
