@@ -164,7 +164,7 @@ int main (int argc, char **argv) {
     /* bind the managing socket to a name */
 
     socket_address_input.sin_family= AF_INET;
-    // socket_address_input.sin_addr.s_addr= htonl(INADDR_ANY);
+    socket_address_input.sin_addr.s_addr= htonl(INADDR_ANY);
     socket_address_input.sin_addr.s_addr= inet_addr("127.0.0.1");
     socket_address_input.sin_port= htons(MYPORT);
 

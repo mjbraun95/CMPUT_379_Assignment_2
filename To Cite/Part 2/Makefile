@@ -1,14 +1,11 @@
 CC = gcc
-DB = gdb
 CFLAGS = -Wall -Wextra
-GDBFLAGS = -g -Wall -Wextra
-
 
 	
 all: gs_client client server a2p2
 
-# debug:
-# 	gdb ${GDBFLAGS} -o all
+debug: CFLAGS += -g
+debug: clean a2p2.c
 
 gs_client: gs_client.c
 	$(CC) $(CFLAGS) -o gs_client gs_client.c

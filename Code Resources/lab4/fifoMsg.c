@@ -77,7 +77,7 @@ MSG  composeMFLOAT (float a, float b, float c)
     return msg;
 }
 // ------------------------------
-       
+    //    ####
 void sendFrame (int fd, KIND kind, MSG *msg)
 {
     FRAME  frame;
@@ -88,7 +88,7 @@ void sendFrame (int fd, KIND kind, MSG *msg)
     frame.msg=  *msg;
     write (fd, (char *) &frame, sizeof(frame));
 }
-
+//####
 FRAME rcvFrame (int fd)
 {
     int    len; 
@@ -133,7 +133,7 @@ void printFrame (const char *prefix, FRAME *frame)
 // ------------------------------
 
 
-      
+//##
 void do_client (int fifoCS, int fifoSC)
 {
     FRAME  frame;
@@ -155,7 +155,7 @@ void do_client (int fifoCS, int fifoSC)
     sendFrame (fifoCS, DONE, &msg);
 }
 
-
+//##
 void do_server (int fifoCS, int fifoSC)
 {
     MSG    msg;
@@ -170,6 +170,7 @@ void do_server (int fifoCS, int fifoSC)
     }
 }
 
+//####
 
 int main (int argc, char *argv[])
 {
